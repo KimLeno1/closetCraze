@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Product, UserStatus } from '../types';
+import { Product, Bundle, UserStatus } from '../types';
 import { Trash2, Bookmark, ShoppingBag, Clock, ShieldCheck, ArrowRight, Zap, Loader2, AlertCircle, Timer } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 interface CartPanelProps {
-  cartItems: Product[];
+  cartItems: (Product | Bundle)[];
   removeFromCart: (id: string) => void;
   moveToVault: (id: string) => void;
   onCheckout: () => void;
@@ -13,11 +13,11 @@ interface CartPanelProps {
   userStatus: UserStatus;
 }
 
-export const CartPanel: React.FC<CartPanelProps> = ({ 
-  cartItems, 
-  removeFromCart, 
-  moveToVault, 
-  onCheckout, 
+export const CartPanel: React.FC<CartPanelProps> = ({
+  cartItems,
+  removeFromCart,
+  moveToVault,
+  onCheckout,
   timeLeft,
   userStatus
 }) => {
@@ -26,7 +26,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
   const total = cartItems.reduce((acc, item) => acc + item.price, 0);
   const originalTotal = cartItems.reduce((acc, item) => acc + (item.originalPrice || item.price), 0);
   const savings = originalTotal - total;
-  
+
   const containsPreOrder = cartItems.some(i => i.isPreOrder);
 
   const formatTime = (seconds: number) => {
@@ -43,7 +43,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
       const prompt = `User status: ${userStatus}. Items in bag: ${items}. 
       Perform a "Tactical Risk Analysis". Explain in 20 words why releasing these items back to the vault would cause "Aesthetic Regression" or "Status Decay". 
       Tone: High-end, cold, architectural, urgent.`;
-      
+
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,
@@ -109,7 +109,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                   ) : (
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-stone-500 uppercase tracking-widest">Run Gemini Protocol Analysis on these selections?</p>
-                      <button 
+                      <button
                         onClick={runRiskAnalysis}
                         disabled={isAnalyzing}
                         className="text-[10px] font-bold uppercase tracking-widest text-white hover:underline underline-offset-8 flex items-center gap-2 transition-all"
@@ -131,8 +131,8 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                       <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
                       {item.isPreOrder && (
                         <div className="absolute bottom-0 left-0 right-0 bg-indigo-500/80 backdrop-blur-md py-1.5 flex justify-center items-center gap-2">
-                           <Timer size={10} className="text-white" />
-                           <span className="text-[8px] font-bold uppercase tracking-widest text-white">Pre-order Protocol</span>
+                          <Timer size={10} className="text-white" />
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-white">Pre-order Protocol</span>
                         </div>
                       )}
                     </div>
@@ -140,7 +140,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-1">{item.mood} // Logic</p>
+                            <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-1">
+                              {('mood' in item) ? `${item.mood} // Logic` : 'COLLECTIVE // BUNDLE'}
+                            </p>
                             <h3 className="text-3xl font-serif">{item.name}</h3>
                           </div>
                           <div className="text-right">
@@ -156,14 +158,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                       </div>
 
                       <div className="flex gap-8 pt-6">
-                        <button 
+                        <button
                           onClick={() => moveToVault(item.id)}
                           className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-500 hover:text-white flex items-center gap-2 transition-colors group/btn"
                         >
                           <Bookmark size={12} className="group-hover/btn:fill-current" />
                           Secure in Vault
                         </button>
-                        <button 
+                        <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-600 hover:text-red-400 flex items-center gap-2 transition-colors"
                         >
@@ -181,7 +183,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
             <aside className="space-y-8">
               <div className="p-10 bg-[#0D0D0D] border border-white/5 rounded-sm sticky top-32">
                 <h4 className="text-[10px] uppercase tracking-[0.5em] font-bold text-stone-600 mb-10">Final Commitment</h4>
-                
+
                 <div className="space-y-6 mb-12">
                   <div className="flex justify-between text-sm font-light">
                     <span className="text-stone-500">MSRP Valuation</span>
@@ -204,7 +206,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={onCheckout}
                   className={`w-full py-6 text-xs font-bold uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 group overflow-hidden relative ${containsPreOrder ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-white text-black hover:bg-stone-200'}`}
                 >
@@ -212,13 +214,13 @@ export const CartPanel: React.FC<CartPanelProps> = ({
                     {containsPreOrder ? 'Initialize Pre-order' : 'Finalize Deployment'}
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <div className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all duration-[600s] ease-linear" style={{ width: `${(timeLeft/600)*100}%` }} />
+                  <div className="absolute bottom-0 left-0 h-1 bg-amber-500 transition-all duration-[600s] ease-linear" style={{ width: `${(timeLeft / 600) * 100}%` }} />
                 </button>
 
                 <div className="mt-8 flex items-center gap-4 text-stone-600">
                   <ShieldCheck size={18} className="shrink-0" />
                   <p className="text-[9px] uppercase tracking-[0.2em] leading-relaxed">
-                    {containsPreOrder 
+                    {containsPreOrder
                       ? "Pre-orders involve external archive fulfillment and may require extended temporal windows for deployment."
                       : "By finalizing, you acknowledge the scarcity and commit to the chosen silhouette legacy."}
                   </p>

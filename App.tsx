@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  MemoryRouter, 
+  BrowserRouter, 
   Routes, 
   Route, 
   Navigate, 
@@ -229,7 +229,7 @@ const AppContent: React.FC = () => {
             />
           } />
           <Route path="/vault" element={<VaultPanel vaultItems={vaultProducts} removeFromVault={(id) => setVault(v => v.filter(i => i !== id))} moveToCart={addToCart} userStatus={currentStatus} extraVaultSlots={extraVaultSlots} diamonds={diamonds} onBuySpace={(c, s) => { setDiamonds(d => d - c); setExtraVaultSlots(v => v + s); }} />} />
-          <Route path="/cart" element={<CartPanel cartItems={cartItems as Product[]} removeFromCart={(id) => setCartItems(v => v.filter(i => i.id !== id))} moveToVault={(id) => { setVault(v => [...v, id]); setCartItems(c => c.filter(i => i.id !== id)); }} onCheckout={() => navigate('/checkout')} timeLeft={timeLeft} userStatus={currentStatus} />} />
+          <Route path="/cart" element={<CartPanel cartItems={cartItems} removeFromCart={(id) => setCartItems(v => v.filter(i => i.id !== id))} moveToVault={(id) => { setVault(v => [...v, id]); setCartItems(c => c.filter(i => i.id !== id)); }} onCheckout={() => navigate('/checkout')} timeLeft={timeLeft} userStatus={currentStatus} />} />
           <Route path="/orders" element={<OrdersPanel orders={orders} userStatus={currentStatus} />} />
           <Route path="/checkout" element={<CheckoutPanel cartItems={cartItems} onBack={() => navigate('/cart')} onComplete={completeCheckout} userStatus={currentStatus} />} />
           <Route path="/profile" element={<ProfilePanel user={user} points={points} diamonds={diamonds} userStatus={currentStatus} />} />
@@ -276,9 +276,9 @@ const ProductDetailWrapper: React.FC<any> = ({ products, userStatus, addToCart, 
 };
 
 const App: React.FC = () => (
-  <MemoryRouter>
+  <BrowserRouter>
     <AppContent />
-  </MemoryRouter>
+  </BrowserRouter>
 );
 
 export default App;
